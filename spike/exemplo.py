@@ -17,8 +17,8 @@ from pathlib import Path
 import hashlib
 import random
 from itertools import combinations
-Path("saida-esperada.txt").write_text("Resultado deterministico da simulacao de decisao arriscada.\n")
 
+file1 = open("saida-esperada.txt", "w")
 
 PACIENTES = [f"cliente-{i:02d}" for i in range(1, 25)]
 def impressao(chave: str) -> int:
@@ -44,6 +44,17 @@ class Celula:
         novos_dados = dados_atuais_celula + valor
         self.registros_locais.armazenar(cliente, novos_dados)
         return novos_dados
+    def sync(self, sistema_legado: "Legado") -> None:
+        '''Sincroniza os dados locais da celula com o sistema legado.'''
+        while self.pendentes:
+            cliente, valor = self.pendentes.pop(0)
+            try:
+                resultado = sistema_legado.sync(cliente, valor)
+                print(f" {resultado}")
+            except RuntimeError:
+                self.pendentes.insert(0, (cliente, valor))
+                break
+        
 
 class Local:
     """Simula o banco de dados local da celula, que nao e compartilhado com
@@ -115,76 +126,57 @@ def parte_1() -> None:
     roteador = Roteador(celulas)
     rede = Rede()
     sistema_legado = Legado()
+    
+    
+    print("Parte 1: distribuicao inicial dos pacientes pelas celulas")
+    file1.write("Parte 1: distribuicao inicial dos pacientes pelas celulas.\n")
     for posicao, cliente in enumerate(PACIENTES, start=1):
-        roteador.enviar(cliente, random.randint(1, 100) + posicao)    
-    print("Parte 1: distribuicao dos pacientes pelas celulas")
+        roteador.enviar(cliente, random.randint(1, 100) + posicao)
+    
     for celula in celulas:
-        print(f" celula {celula.nome}: {len(celula.local.dados):2d} pacientes, "
-              f"total {sum(celula.local.dados.values())}")
+        print(f" celula {celula.nome}: {len(celula.registros_locais.registros):2d} pacientes, "
+              f"total {sum(celula.registros_locais.registros.values())}")
 
     rede.perder_conexao()
     print("\nFalha declarada na rede. Operacao local das celulas.")
+    file1.write("\nFalha declarada na rede. Operacao local das celulas.\n")
     celulas[1].saudavel = False  # simula falha da celula B
-    print("\nFalha declarada nas celulas indisponiveis. Reenvio de um pedido por cliente:")
-
-    for celula in celulas:
-        if not celula.saudavel:
-            print(f" celula {celula.nome}: fora do ar; pacientes desta celula nao serao atendidos")
+    print(f"\n celula {celulas[1].nome}: fora do ar; raio de impacto isolado.")
+    file1.write(f"\n celula {celulas[1].nome}: fora do ar; raio de impacto isolado.\n")
 
     for cliente in PACIENTES[:5]:
         status, nome_celula = roteador.enviar(cliente, random.randint(1, 100))
+        file1.write(f" cliente {cliente}; status {status}; celula {nome_celula}\n")
         print(f" cliente {cliente}; status {status}; celula {nome_celula}")
+
+    print("\nDados locais ficam pendentes enquanto a rede nao volta.")
+    file1.write("\nDados locais ficam pendentes enquanto a rede nao volta.\n")
+    for celula in celulas:
+        if not celula.saudavel:
+            print(f" celula {celula.nome} acumulou {len(celula.pendentes)} eventos pendentes")
+            file1.write(f" celula {celula.nome} acumulou {len(celula.pendentes)} eventos pendentes\n")
     
     rede.reconectar()
     print("\nRede reconectada. Sincronizando com sistema legado.")
+    file1.write("\nRede reconectada. Sincronizando com sistema legado.\n")
+    sistema_legado.recuperar()
+    
     celulas[1].saudavel = True  # simula recuperacao da celula B
     for celula in celulas:
         if celula.saudavel:
-            for cliente, valor in celula.pendentes:
-                try:
-                    resultado = sistema_legado.sync(cliente, valor)
-                    print(f" {resultado}")
-                except RuntimeError as e:
-                    print(f" falha ao sincronizar {cliente}: {e}")
-# Parte 2: uma unica celula. Os oito nos abaixo pertencem a celula A e nao sao
-# compartilhados com outras celulas: shuffle sharding vale dentro da celula.
-CONTAS_DA_CELULA_A = [f"conta-{i:02d}" for i in range(1, 25)]
-NOS_DA_CELULA_A = list(range(8))
-PARES_EMBARALHADOS = list(combinations(NOS_DA_CELULA_A, 2))
-PARES_FIXOS = [(0, 1), (2, 3), (4, 5), (6, 7)]
-def sorteio_embaralhado(conta: str) -> tuple[int, int]:
-    """Shuffle sharding: cada conta recebe um dos 28 pares possiveis de nos da
-    celula."""
-    return PARES_EMBARALHADOS[impressao(conta) % len(PARES_EMBARALHADOS)]
-
-def sorteio_fixo(conta: str) -> tuple[int, int]:
-    """Particao classica: quatro grupos fixos de dois nos."""
-    return PARES_FIXOS[impressao(conta) % len(PARES_FIXOS)]
-
-def derrubados(sorteio, caidos: set[int]) -> list[str]:
-    """Contas sem nenhum no: '<=' testa se o par atribuido esta contido nos nos
-    caidos."""
-    return [c for c in CONTAS_DA_CELULA_A if set(sorteio(c)) <= caidos]
-
-def cenario(caidos: set[int]) -> None:
-    print(f" nos fora do ar: {sorted(caidos)}")
-    for rotulo, sorteio in (("particao fixa ", sorteio_fixo), ("shuffle sharding ", sorteio_embaralhado)):
-        perdidos = derrubados(sorteio, caidos)
-        parciais = [c for c in CONTAS_DA_CELULA_A if set(sorteio(c)) & caidos and c not in perdidos]
-        print(f" {rotulo}: {len(perdidos)} conta(s) sem nenhum no, " 
-              f"{len(parciais)} com capacidade reduzida")
-        
-def parte_2() -> None:
-    print("\nParte 2: shuffle sharding dentro da celula A, 8 nos e 2 nos por conta")
-    print(f" combinacoes possiveis: {len(PARES_EMBARALHADOS)} pares (particao fixa oferece "f"{len(PARES_FIXOS)})")
-    print("cenario 1, pior caso da particao fixa: os dois nos caidos formam um grupo fixo")
-    cenario({0, 1})
-    print(" cenario 2: os dois nos caidos estao em grupos fixos diferentes")
-    cenario({0, 2})
-    print(" amostra de atribuicao embaralhada:")
-    for conta in CONTAS_DA_CELULA_A[:4]:
-        print(f" {conta}: nos {list(sorteio_embaralhado(conta))}")
+            celula.sync(sistema_legado)
+            celula.pendentes.clear()  # limpa pendentes apos sincronizacao bem-sucedida
+    
+    
+    for celula in celulas:
+        print(f" celula {celula.nome}: {len(celula.registros_locais.registros):2d} pacientes, "
+              f"total {sum(celula.registros_locais.registros.values())}")
+        print(f" celula {celula.nome}: {len(celula.pendentes)} eventos pendentes apos sincronizacao")
+        file1.write(f" celula {celula.nome}: {len(celula.registros_locais.registros):2d} pacientes, "
+           f"total {sum(celula.registros_locais.registros.values())}\n")
+        file1.write(f" celula {celula.nome}: {len(celula.pendentes)} eventos pendentes apos sincronizacao\n")
+    print("\nSincronizacao finalizada.")
+    file1.write("\nSincronizacao finalizada.\n")
         
 if __name__ == "__main__":
     parte_1()
-    parte_2()
