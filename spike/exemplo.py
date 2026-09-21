@@ -40,6 +40,18 @@ class Celula:
         self.pedidos[cliente] = self.pedidos.get(cliente, 0) + valor
         return self.pedidos[cliente]
 
+class Local:
+    """Simula o banco de dados local da celula, que nao e compartilhado com
+    outras celulas."""
+    
+    def __init__(self):
+        self.dados = {}
+        
+    def armazenar(self, chave: str, valor: int) -> None:
+        self.dados[chave] = valor
+        
+    def ler(self, chave: str) -> int:
+        return self.dados.get(chave, 0)
 
 class Roteador:
     """Camada mais fina possivel: escolhe a celula pela chave de particao e
