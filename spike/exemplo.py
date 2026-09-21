@@ -15,11 +15,12 @@ O QUE ENTREGAR
 '''
 from pathlib import Path
 import hashlib
+import random
 from itertools import combinations
 Path("saida-esperada.txt").write_text("Resultado deterministico da simulacao de decisao arriscada.\n")
 
 
-CLIENTES = [f"cliente-{i:02d}" for i in range(1, 25)]
+PACIENTES = [f"cliente-{i:02d}" for i in range(1, 25)]
 def impressao(chave: str) -> int:
     """Hash estavel entre execucoes (hash() embutido usa semente aleatoria por
     processo)."""
@@ -32,26 +33,30 @@ class Celula:
 
     def __init__(self, nome: str) -> None:
         self.nome = nome
-        self.pedidos = {}
+        self.registros_locais = Local()
         self.saudavel = True
+        self.pendentes = []
     def processar(self, cliente: str, valor: int) -> int:
         if not self.saudavel:
+            self.pendentes.append((cliente, valor))
             raise RuntimeError(f"celula {self.nome} indisponivel")
-        self.pedidos[cliente] = self.pedidos.get(cliente, 0) + valor
-        return self.pedidos[cliente]
+        dados_atuais_celula = self.registros_locais.ler(cliente)
+        novos_dados = dados_atuais_celula + valor
+        self.registros_locais.armazenar(cliente, novos_dados)
+        return novos_dados
 
 class Local:
     """Simula o banco de dados local da celula, que nao e compartilhado com
     outras celulas."""
     
     def __init__(self):
-        self.dados = {}
+        self.registros = {}
         
     def armazenar(self, chave: str, valor: int) -> None:
-        self.dados[chave] = valor
+        self.registros[chave] = valor
         
     def ler(self, chave: str) -> int:
-        return self.dados.get(chave, 0)
+        return self.registros.get(chave, 0)
 
 class Roteador:
     """Camada mais fina possivel: escolhe a celula pela chave de particao e
@@ -63,10 +68,10 @@ class Roteador:
     def celula_de(self, cliente: str) -> Celula:
         return self.celulas[impressao(cliente) % len(self.celulas)]
 
-    def enviar(self, cliente: str, valor: int) -> tuple[str, str]: #retorna tupla com status e nome da celula
+    def enviar(self, cliente: str, evento: int) -> tuple[str, str]: #retorna tupla com status e nome da celula
         celula = self.celula_de(cliente)
         try:
-            celula.processar(cliente, valor)
+            celula.processar(cliente, evento) #evento pode ser registro, atendimento, etc
             return ("ok", celula.nome)
         except RuntimeError:
             return ("falha", celula.nome)
@@ -82,31 +87,65 @@ class Rede:
     def reconectar(self):
         self.disponivel = True
 
+class Legado:
+    '''Simula um sistema legado, podendo apresentar falhas.'''
+    def __init__(self):
+        self.disponivel = True
+        self.dados = []
+    
+    def falhar(self):
+        self.disponivel = False
+        
+    def recuperar(self):
+        self.disponivel = True
+        
+    def sync(self, cliente: str, valor: int) -> str:
+        if not self.disponivel:
+            raise RuntimeError("sistema legado fora do ar")
+        self.dados.append((cliente, valor))
+        return f"sincronizado {cliente} com valor {valor}"
     
 def parte_1() -> None:
     '''
     parte 1:
-    1. distribui os clientes pelas celulas
-    2. simula a falha de uma celula, mostrando o impacto na base de clientes
+    1. distribui os pacientes pelas celulas
+    2. simula a falha de uma celula, mostrando o impacto na base de pacientes
     '''
     celulas = [Celula(nome) for nome in ("A", "B", "C", "D")]
     roteador = Roteador(celulas)
-    for posicao, cliente in enumerate(CLIENTES, start=1):
-        roteador.enviar(cliente, 100 + posicao)    
-    print("Parte 1: distribuicao dos clientes pelas celulas")
+    rede = Rede()
+    sistema_legado = Legado()
+    for posicao, cliente in enumerate(PACIENTES, start=1):
+        roteador.enviar(cliente, random.randint(1, 100) + posicao)    
+    print("Parte 1: distribuicao dos pacientes pelas celulas")
     for celula in celulas:
-        print(f" celula {celula.nome}: {len(celula.pedidos):2d} clientes, "
-        f"total {sum(celula.pedidos.values())}")
-    celulas[1].saudavel = False
-    print("\nFalha declarada na celula B. Reenvio de um pedido por cliente:")
-    atendidos = [c for c in CLIENTES if roteador.enviar(c, 10)[0] == "ok"]
-    afetados = len(CLIENTES) - len(atendidos)
-    print(f" clientes atendidos: {len(atendidos)}")
-    print(f" clientes afetados: {afetados}")
-    print(f" raio de impacto: {afetados / len(CLIENTES):.0%} da base")
-    print(f" celula A segue com {len(celulas[0].pedidos)} clientes e dados intactos")
+        print(f" celula {celula.nome}: {len(celula.local.dados):2d} pacientes, "
+              f"total {sum(celula.local.dados.values())}")
 
+    rede.perder_conexao()
+    print("\nFalha declarada na rede. Operacao local das celulas.")
+    celulas[1].saudavel = False  # simula falha da celula B
+    print("\nFalha declarada nas celulas indisponiveis. Reenvio de um pedido por cliente:")
 
+    for celula in celulas:
+        if not celula.saudavel:
+            print(f" celula {celula.nome}: fora do ar; pacientes desta celula nao serao atendidos")
+
+    for cliente in PACIENTES[:5]:
+        status, nome_celula = roteador.enviar(cliente, random.randint(1, 100))
+        print(f" cliente {cliente}; status {status}; celula {nome_celula}")
+    
+    rede.reconectar()
+    print("\nRede reconectada. Sincronizando com sistema legado.")
+    celulas[1].saudavel = True  # simula recuperacao da celula B
+    for celula in celulas:
+        if celula.saudavel:
+            for cliente, valor in celula.pendentes:
+                try:
+                    resultado = sistema_legado.sync(cliente, valor)
+                    print(f" {resultado}")
+                except RuntimeError as e:
+                    print(f" falha ao sincronizar {cliente}: {e}")
 # Parte 2: uma unica celula. Os oito nos abaixo pertencem a celula A e nao sao
 # compartilhados com outras celulas: shuffle sharding vale dentro da celula.
 CONTAS_DA_CELULA_A = [f"conta-{i:02d}" for i in range(1, 25)]
