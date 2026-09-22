@@ -44,3 +44,6 @@ Se a arquitetura não fosse baseada em células, uma falha de rede ou de sistema
 ## Conclusão
 
 O spike demonstra que, em cenários de conexão instável, a autonomia local é essencial para que o sistema continue funcionando e garantir eventual consistência quando a rede volta.
+
+# Referências
+- Código adaptado de: Abreu, Douglas H. S. Estilos Arquiteturais de Software: guia de consulta, Capítulo 13, “Arquitetura celular (cell-based)”, seção 13.4, “Exemplo executável”
