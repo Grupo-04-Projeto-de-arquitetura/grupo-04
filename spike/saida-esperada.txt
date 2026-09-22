@@ -1,1 +1,25 @@
-Resultado deterministico da simulacao de decisao arriscada.
+Parte 1: distribuicao inicial dos pacientes pelas celulas.
+
+Falha declarada na rede. Operacao local das celulas.
+
+ celula B: fora do ar; raio de impacto isolado.
+ cliente cliente-01; status ok; celula D
+ cliente cliente-02; status falha; celula B
+ cliente cliente-03; status ok; celula C
+ cliente cliente-04; status falha; celula B
+ cliente cliente-05; status ok; celula D
+
+Dados locais ficam pendentes enquanto a rede nao volta.
+ celula B acumulou 2 eventos pendentes
+
+Rede reconectada. Sincronizando com sistema legado.
+ celula A:  6 pacientes, total 341
+ celula A: 0 eventos pendentes apos sincronizacao
+ celula B:  8 pacientes, total 467
+ celula B: 0 eventos pendentes apos sincronizacao
+ celula C:  5 pacientes, total 553
+ celula C: 0 eventos pendentes apos sincronizacao
+ celula D:  5 pacientes, total 344
+ celula D: 0 eventos pendentes apos sincronizacao
+
+Sincronizacao finalizada.
