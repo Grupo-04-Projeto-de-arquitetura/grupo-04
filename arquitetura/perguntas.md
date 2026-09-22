@@ -1,0 +1,29 @@
+# Perguntas e respostas
+
+## Como a UPA continua triando e atendendo com a internet fora do ar, e o que acontece quando ela volta?
+
+Resposta: Por ser uma arquitetura cell-based, cada UPA é tratada como uma célula, onde o banco local, a triagem e os demais processos acontecem localmente. Quando a internet cai, a unidade continua operando com autonomia, armazenando as operações em fila local e mantendo a continuidade do atendimento. Quando a rede volta, a célula sincroniza os dados com o ambiente central, reconciliando o estado local com o sistema principal sem interromper o atendimento em andamento.
+
+Sustentação nos ADRs e diagramas: essa resposta é sustentada pelo ADR 0002, que define a arquitetura baseada em células como a forma de manter a operação local mesmo sob falha de rede, e pela análise da matriz, que aponta a resiliência local como principal diferencial da arquitetura cell-based. Os diagramas C4 de contexto, contêineres e componentes reforçam essa visão ao mostrar a UPA como unidade autônoma que interage com o sistema central de forma desacoplada e tolerante a falhas.
+
+## Como duas unidades disputando o mesmo leito nunca conseguem reservá-lo ao mesmo tempo, com o sistema legado ainda no circuito?
+
+Resposta: A garantia de que duas unidades não podem reservar o mesmo leito ao mesmo tempo é obtida pelo controle de concorrência no processo de reserva. Antes de confirmar a ocupação, o sistema marca o leito como "em processo de reserva" ou verifica o estado atual do recurso de forma transacional, impedindo que outra unidade leia o mesmo leito como disponível. Assim, duas reservas concorrentes não conseguem ser aceitas ao mesmo tempo. O sistema legado continua presente durante a transição, mas a lógica de validação e proteção do recurso passa a ser tratada no novo sistema, com o legado funcionando como fonte de integração e dados compatíveis.
+
+Sustentação nos ADRs e diagramas: essa resposta está alinhada ao ADR de arquitetura baseada em células, pois a autonomia local exige consistência local e controle de exclusão para recursos compartilhados. A matriz também reforça a necessidade de isolamento e consistência operacional ao tratar a regulação de leitos como um ponto sensível do domínio. O diagrama de componentes evidencia a presença do módulo de regulação e o desacoplamento entre a unidade local e os sistemas externos, permitindo que a reserva seja tratada de forma segura mesmo com o legado ainda no circuito.
+
+## Como o prontuário garante que se saiba quem acessou cada registro, e como convive a guarda de 20 anos com os direitos do paciente sob a LGPD?
+
+Resposta: O prontuário garante a rastreabilidade de acessos porque cada operação é registrada como evento de auditoria. Cada acesso ou alteração inclui, no mínimo, quem acessou, quando ocorreu, qual registro foi consultado ou alterado e se a ação foi autorizada. Essa trilha de auditoria permite provar que o dado foi acessado e por quem, atendendo ao requisito de governança e responsabilidade do sistema. A guarda de 20 anos convive com a LGPD porque a retenção legal aplica-se ao histórico de auditoria e aos eventos de domínio relevantes, enquanto o acesso ao dado permanece restrito por autenticação, autorização, necessidade de uso e políticas de minimização de dados. Em outras palavras, o sistema preserva a auditoria e a legalidade sem abrir o prontuário para acesso indiscriminado.
+
+Sustentação nos ADRs e diagramas: esse ponto é suportado pela decisão de arquitetura que prioriza integridade, rastreabilidade e proteção dos dados sensíveis, especialmente no contexto de prontuário eletrônico e auditoria. O ADR de arquitetura celular não elimina os requisitos de segurança e conformidade; ele os torna mais evidentes na operação local e no sincronismo com o centro. Os diagramas C4 de componentes e de contexto ajudam a mostrar a separação entre o subsistema local, os módulos de autenticação e auditoria e os sistemas externos, tornando explícita a necessidade de controle de acesso e rastreabilidade.
+
+## Como a notificação compulsória chega à vigilância em até 24 horas mesmo se o sistema federal estiver indisponível?
+
+Resposta: A notificação compulsória é registrada no armazenamento local da célula assim que é criada. Como a unidade opera com autonomia, o evento fica em fila local como pendente enquanto a rede ou o sistema federal estiverem indisponíveis. Quando a conexão retorna, a célula sincroniza esse evento com o ambiente central, que encaminha a notificação para a vigilância. Dessa forma, a notificação não é perdida e pode ser entregue dentro do prazo de 24 horas mesmo com indisponibilidade temporária do sistema externo.
+
+Sustentação nos ADRs e diagramas: essa resposta é diretamente sustentada pelo ADR 0002 e pelo desenho de resiliência local da arquitetura cell-based. A matriz e o caso demonstram que o problema dos sistemas externos indisponíveis precisa ser contornado por mecanismo de fila local e sincronização eventual. Os diagramas C4 mostram a célula operando autonomamente e enviando eventos para o núcleo central quando a infraestrutura externa volta, preservando a continuidade do fluxo de notificação compulsória.
+
+## Como o sistema legado de regulação é substituído aos poucos sem interromper o serviço?
+
+Resposta: A substituição do sistema legado ocorre de forma gradual em fases. A arquitetura cell-based permite que cada unidade opere localmente enquanto o novo sistema está sendo implantado em paralelo, reduzindo o risco de interrupção. O legado e o novo sistema convivem por meio de adaptadores e interfaces de integração, que permitem a troca incremental de responsabilidades sem quebrar o fluxo de atendimento. Conforme o novo sistema assume as operações críticas, o legado é retirado de forma controlada, mantendo o serviço ininterrupto durante a migração.
