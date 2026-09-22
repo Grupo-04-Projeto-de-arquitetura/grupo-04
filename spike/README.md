@@ -25,7 +25,7 @@ A simulação mostra que, mesmo com falha de infraestrutura externa, a célula c
 
    ```bash
 
-   cd grupo-04/spike
+   cd spike
 
    ```
 
