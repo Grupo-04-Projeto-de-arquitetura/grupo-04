@@ -42,6 +42,20 @@
 
 **O que faríamos no lugar:** Escrever o registro de intenção de notificação na tabela do *Transactional Outbox* dentro da própria transação de banco de dados do atendimento clínico (no módulo de Atendimento), em vez de delegar o disparo do Outbox a um evento volátil em memória entre subdomínios. Caso a comunicação modular exija desacoplamento, utilizar escuta transacional de eventos conectada ao commit da transação local (`@TransactionalEventListener`) com fallback de persistência direta.
 
+### Objeção 6  Monólito único concentrando módulos com naturezas distintas
+
+**Trecho atacado:** Diagrama de Contêineres (Nível 2), Redis descrito como “Verifica saldo de cotas e adquire locks”.
+
+**Argumento:** Manter o contador de cotas como fonte de verdade no Redis (além do lock) é arriscado em produções on‑premises com pouca operação: keys podem ser perdidas por reinício sem persistência, evicção quando o cache enche, ou divergências durante failover/replica split‑brain. Isso dificulta a auditoria e a reconciliação automática do estado das quotas, já que desvios tendem a ser detectados muito tarde e muitas vezes exigem intervenção manual. Logo, a dependência do Redis para contadores críticos aumenta a probabilidade de indisponibilidade do serviço.
+
+**O que faríamos no lugar:**
+
+- Usar padrão "create‑if‑not‑exists" com constraint única: modelar uma tabela de alocações com `UNIQUE(leito_id)` e reservar tentando `INSERT`. Se o `INSERT` for bem‑sucedido, a reserva é concedida; se houver violação de chave, o recurso já está ocupado. Para reservas temporárias, combinar com um job que expira registros antigos. Essa abordagem evita locks pesados e é simples de operar On‑Premise.
+  
+- Se for necessário um caminho rápido (fast‑path) para latência, usar o Redis apenas como cache/fast‑path combinado com escrita de um evento na `Transactional Outbox` para reconciliação; um job periódico reconcilia e corrige divergências.
+
+- Se o time optar por manter Redis como contador primário, exigir persistência (AOF), réplicas/HA, operações atômicas via scripts Lua e instrumentação/alertas (eviction, AOF desativado, latência), além de runbooks e testes de falha obrigatórios.
+
 ---
 
 **Observação (não é objeção de arquitetura):** O grupo não entregou o Mapa de Restrições e Decisões (segunda entrega solicitada no enunciado), o que impede avaliar se as justificativas textuais para cada decisão  especialmente para o Envelope C  de fato endereçam a pergunta obrigatória "como vocês substituem o legado aos poucos, com pouca gente e sem nuvem?". As objeções acima se baseiam apenas no que os diagramas comunicam.
