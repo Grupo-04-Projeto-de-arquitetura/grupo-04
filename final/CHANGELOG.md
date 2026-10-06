@@ -71,3 +71,43 @@ A resposta será reescrita para:
 - Remover a afirmação de que a guarda de 20 anos se aplica automaticamente ao histórico de auditoria e eventos de domínio.
 - Deixar claro que os **prazos de retenção por categoria de dado** serão definidos pela área jurídica/institucional responsável.
 - Esclarecer que a **base legal e o atendimento aos direitos do titular** são decisões de governança, não resolvidas exclusivamente pela arquitetura.
+
+# Changelog — Perguntas e respostas#
+
+## Pergunta alterada: "Como duas unidades disputando o mesmo leito nunca conseguem reservá-lo ao mesmo tempo, com o sistema legado ainda no circuito?"
+
+A resposta em **perguntas.md** foi ajustada para refletir o que foi explicitado em **respostas-recebidas.md**: a Regulação de Leitos foi mantida fora do modelo celular, com uma autoridade central única e controle de concorrência por versão do recurso e lock otimista. Além disso, também detalha a separação estrita dos subdomínios e a política de degradação graciosa (*fail-safe*) durante instabilidade de rede.
+
+## O que foi alterado
+
+- Reescrita a resposta para deixar claro que a **autonomia celular** e a sincronização assíncrona dizem respeito apenas ao fluxo de Atendimento e Triagem Local.
+- Explicado que a reserva de leitos é tratada como **single writer** e que a decisão de ocupação é tomada pelo **Serviço de Leitos e Regulação**.
+- Ajustado o texto para dizer que a operação **não é confirmada localmente** quando a unidade fica desconectada.
+- Definido o comportamento em degradação como **falha ou pendência** da reserva, em vez de confirmação offline.
+- Esclarecido que o **sistema legado** continua apenas como mecanismo de integração e sincronização de estado, sem exercer autoridade concorrente sobre a reserva.
+
+# Changelog — Perguntas e respostas
+
+## Pergunta alterada: "Como duas unidades disputando o mesmo leito nunca conseguem reservá-lo ao mesmo tempo, com o sistema legado ainda no circuito?"
+
+A resposta em **perguntas.md** foi ajustada para refletir o que foi explicitado em **respostas-recebidas.md**: a Regulação de Leitos foi mantida fora do modelo celular, com uma autoridade central única e controle de concorrência por versão do recurso e lock otimista. Além disso, também detalha a separação estrita dos subdomínios e a política de degradação graciosa (*fail-safe*) durante instabilidade de rede.
+
+## O que foi alterado
+
+- Reescrita a resposta para deixar claro que a **autonomia celular** e a sincronização assíncrona dizem respeito apenas ao fluxo de Atendimento e Triagem Local.
+- Explicado que a reserva de leitos é tratada como **single writer** e que a decisão de ocupação é tomada pelo **Serviço de Leitos e Regulação**.
+- Ajustado o texto para dizer que a operação **não é confirmada localmente** quando a unidade fica desconectada.
+- Definido o comportamento em degradação como **falha ou pendência** da reserva, em vez de confirmação offline.
+- Esclarecido que o **sistema legado** continua apenas como mecanismo de integração e sincronização de estado, sem exercer autoridade concorrente sobre a reserva.
+
+## Pergunta alterada: "Como o prontuário garante que se saiba quem acessou cada registro, e como convive a guarda de 20 anos com os direitos do paciente sob a LGPD?"
+
+A resposta em **perguntas.md** foi ajustada para refletir o posicionamento registrado em **respostas-recebidas.md**: a arquitetura oferece rastreabilidade e mecanismos de proteção técnica, mas a base legal, os prazos de retenção e os direitos do titular pertencem à governança institucional e jurídica.
+
+## O que foi alterado
+
+- Separado o que é fornecido pela arquitetura do que depende de **política institucional e jurídica**.
+- Explicitado que autenticação, autorização, trilha de auditoria, criptografia e retenção configurável são **capacidades técnicas**.
+- Removida a ideia de que a arquitetura, sozinha, determina a **base legal do tratamento** ou o **prazo de retenção** aplicável a cada dado clínico.
+- Ajustado o texto para indicar que os prazos de retenção por categoria de dado são **parametrizáveis pela arquitetura**, mas **definidos pela área jurídica/institucional**.
+- Deixado claro que a convivência entre a guarda de 20 anos e a LGPD depende de **políticas de acesso, minimização e retenção** da organização, não apenas de decisões técnicas.
