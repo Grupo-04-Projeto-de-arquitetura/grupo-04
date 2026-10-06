@@ -1,28 +1,36 @@
-# Changelog — ADR 0003#
+# Changelog — 0001
+
 ## Objeção
 
 Foi apontado que a afirmação de que **"duas reservas concorrentes não conseguem ser aceitas ao mesmo tempo"** apresentava uma garantia maior do que a arquitetura demonstrava, principalmente diante do uso de bancos locais e sincronização posterior em outras partes do sistema.
-## ADR alterada: 0003
+
+## A onde mudou: ADR0003
+
 ## Decisão
+
 **Parcialmente aceita.**
+
 A objeção foi parcialmente rebatida porque a **Regulação de Leitos não utiliza o modelo Cell-Based com bancos locais independentes**. As reservas são realizadas contra um **Serviço de Leitos e Regulação centralizado**, que atua como autoridade única e utiliza **single writer + lock otimista**.
+
 Entretanto, a redação original foi considerada imprecisa por não explicar o comportamento em caso de perda de conectividade.
+
 ## O que vai mudar
+
 A resposta será reescrita para:
+
 - Explicitar o **Serviço de Leitos e Regulação como autoridade central única**.
 - Explicar o uso de **single writer e lock otimista** para evitar reservas concorrentes.
 - Deixar claro que uma unidade **desconectada não poderá confirmar uma reserva localmente**.
 - Especificar que, sem acesso ao serviço central, a reserva **falha ou permanece pendente/bloqueada**.
 - Esclarecer que o **sistema legado atua apenas na sincronização/integração**, não como autoridade concorrente.
 
-
-# Changelog — ADR 0004#
+# Changelog — 0002
 
 ## Objeção
 
 Foi apontado que o **Event Sourcing não garante, por si só, uma auditoria completa**, pois registra principalmente eventos que alteram o estado do domínio. Visualizações e consultas ao prontuário não necessariamente geram eventos de domínio e, portanto, precisam de um mecanismo específico de auditoria.
 
-## ADR alterada: 0004
+## A onde mudou: ADR0004
 
 ## Decisão
 
@@ -40,13 +48,13 @@ A arquitetura será ajustada para:
 - Limitar o uso de **Event Sourcing** aos contextos em que o histórico e a reconstrução temporal do estado agreguem valor ao domínio.
 - Definir políticas específicas de **retenção e gerenciamento** para os logs de auditoria, considerando os requisitos de conformidade e proteção de dados.
 
-# Changelog — ADR 0005#
+# Changelog — 0003
 
 ## Objeção
 
 Foi apontado que a arquitetura, por si só, não define a **base legal, os prazos de retenção ou o atendimento aos direitos do titular previstos na LGPD**. Esses pontos dependem de decisões de governança e jurídicas, não apenas de decisões arquiteturais.
 
-## ADR alterada: 0005
+## A onde mudou: ADR0005
 
 ## Decisão
 
