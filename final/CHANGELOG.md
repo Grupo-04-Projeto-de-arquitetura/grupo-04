@@ -72,7 +72,7 @@ A resposta será reescrita para:
 - Deixar claro que os **prazos de retenção por categoria de dado** serão definidos pela área jurídica/institucional responsável.
 - Esclarecer que a **base legal e o atendimento aos direitos do titular** são decisões de governança, não resolvidas exclusivamente pela arquitetura.
 
-# Changelog — Perguntas e respostas#
+# Changelog — Perguntas e respostas
 
 ## Pergunta alterada: "Como duas unidades disputando o mesmo leito nunca conseguem reservá-lo ao mesmo tempo, com o sistema legado ainda no circuito?"
 
@@ -85,8 +85,6 @@ A resposta em **perguntas.md** foi ajustada para refletir o que foi explicitado 
 - Ajustado o texto para dizer que a operação **não é confirmada localmente** quando a unidade fica desconectada.
 - Definido o comportamento em degradação como **falha ou pendência** da reserva, em vez de confirmação offline.
 - Esclarecido que o **sistema legado** continua apenas como mecanismo de integração e sincronização de estado, sem exercer autoridade concorrente sobre a reserva.
-
-# Changelog — Perguntas e respostas
 
 ## Pergunta alterada: "Como duas unidades disputando o mesmo leito nunca conseguem reservá-lo ao mesmo tempo, com o sistema legado ainda no circuito?"
 
